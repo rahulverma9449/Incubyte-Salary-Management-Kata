@@ -10,3 +10,4 @@ def get_country_salary_metrics_service(db, country: str):
 
 def get_job_title_salary_metrics_service(db, job_title: str):
     return get_job_title_average_salary(db, job_title)
+
