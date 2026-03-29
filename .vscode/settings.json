@@ -1,3 +1,9 @@
 {
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "chat.mcp.discovery.enabled": {
+        "windsurf": true,
+        "claude-desktop": true,
+        "cursor-global": true,
+        "cursor-workspace": true
+    }
 }
