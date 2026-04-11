@@ -42,14 +42,15 @@ jobs:
           HOST: ${{ secrets.EC2_HOST }}
           USER: ${{ secrets.EC2_USER }}
         run: |
-          echo "$PRIVATE_KEY" > private_key.pem
-          chmod 600 private_key.pem
+          mkdir -p ~/.ssh
+          printf "%s\n" "$PRIVATE_KEY" | tr -d '\r' > ~/.ssh/private_key.pem
+          chmod 600 ~/.ssh/private_key.pem
 
-          ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER}@${HOST} "mkdir -p /home/${USER}/app"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/private_key.pem ${USER}@${HOST} "mkdir -p /home/${USER}/app"
 
-          scp -o StrictHostKeyChecking=no -i private_key.pem -r ./* ${USER}@${HOST}:/home/${USER}/app/
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/private_key.pem -r ./* ${USER}@${HOST}:/home/${USER}/app/
 
-          ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER}@${HOST} << EOF
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/private_key.pem ${USER}@${HOST} << EOF
             set -e
 
             mkdir -p /home/${USER}/app
@@ -67,15 +68,14 @@ jobs:
             pip install --upgrade pip
             pip install -r requirements.txt
 
-            sudo systemctl stop fastapi-app || true
-            sudo systemctl daemon-reload
-            sudo systemctl enable fastapi-app || true
-            sudo systemctl start fastapi-app
+            pkill -f "uvicorn app.main:app" || true
 
-            sleep 2
-            sudo systemctl status fastapi-app --no-pager
+            nohup /home/${USER}/app/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 > /home/${USER}/app/app.log 2>&1 &
+
+            sleep 3
+            pgrep -af uvicorn || true
 
             echo "Deployment completed successfully!"
           EOF
 
-          rm -f private_key.pem
+          rm -f ~/.ssh/private_key.pem
