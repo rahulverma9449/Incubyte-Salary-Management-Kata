@@ -48,8 +48,8 @@ jobs:
           HOST: ${{ secrets.EC2_HOST }}
           USER: ${{ secrets.EC2_USER }}
         run: |
-          echo "$PRIVATE_KEY" > cicd.ppk
-          chmod 600 cicd.ppk
+          echo "$PRIVATE_KEY" > cicd.pem
+          chmod 600 cicd.pem
 
           ssh -o StrictHostKeyChecking=no -i cicd.ppk ${USER}@${HOST} << EOF
             set -e
@@ -69,9 +69,9 @@ jobs:
             source venv/bin/activate
           EOF
 
-          scp -o StrictHostKeyChecking=no -i private_key.pem -r ./* ${USER}@${HOST}:/home/${USER}/app/
+          scp -o StrictHostKeyChecking=no -i cicd.pem -r ./* ${USER}@${HOST}:/home/${USER}/app/
 
-          ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER}@${HOST} << EOF
+          ssh -o StrictHostKeyChecking=no -i cicd.pem ${USER}@${HOST} << EOF
             set -e
 
             cd /home/${USER}/app
@@ -106,4 +106,4 @@ jobs:
             echo "Deployment completed successfully"
           EOF
 
-          rm -f cicd.ppk
+          rm -f cicd.pem
